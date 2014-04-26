@@ -282,7 +282,16 @@ just_kill_connection:
 					wsi->user_space) /* user code may own */
 		free(wsi->user_space);
 
+#ifndef LWS_ASYNC_CONNECTION_FREE
 	free(wsi);
+#else
+	/* free only for first protocol (http) */
+	if (wsi->protocol == &context->protocols[0])
+		free(wsi);
+	else
+		wsi->user_space = NULL;		/* indication to free asynchronously */
+
+#endif
 }
 
 /**
